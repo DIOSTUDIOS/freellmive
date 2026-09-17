@@ -2,30 +2,31 @@
 """根据 test_results.json 更新 README 可用模型列（保留现有链接与行结构）"""
 import json
 import re
-import openpyxl
 
-# 1. 读取 xlsx 获取 厂商名 -> (官网地址, base_url)
-wb = openpyxl.load_workbook('/data/project/freellmive/配置记录.xlsx')
-ws = wb.active
-rows = list(ws.iter_rows(values_only=True))[1:]
+# 1. 读取当前 README 表格行，提取 厂商名 -> (官网地址, base_url)
+with open('/data/project/freellmive/README.md', 'r', encoding='utf-8') as f:
+    readme = f.read()
+table_start = readme.find('| 厂商名称')
+table_end = readme.find('\n\n', table_start)
+table_text = readme[table_start:table_end]
+
 info_map = {}
-for r in rows:
-    if not r[1]:
+row_pattern = re.compile(r'\|\s*\[(.*?)\]\((.*?)\)\s*\|\s*`?([^`|]*)`?\s*\|\s*.*?\|')
+for line in table_text.split('\n'):
+    line = line.strip()
+    if not line.startswith('| ['):
         continue
-    name = str(r[1]).strip()
-    website = str(r[2]).strip() if r[2] else ''
-    # URL & KEY 列第一行为 base_url
-    base = ''
-    if r[3]:
-        first_line = str(r[3]).split('\n')[0].strip()
-        if first_line.startswith('http'):
-            base = first_line.replace('https://', '').replace('http://', '').rstrip('/')
-    info_map[name] = (website, base)
-# SiliconFlow 的 xlsx base_url 是坏数据，补真实地址
+    m = row_pattern.match(line)
+    if not m:
+        continue
+    name, website, base = m.groups()
+    info_map[name.strip()] = (website.strip(), base.strip())
+
+# SiliconFlow 的 base_url 补真实地址（xlsx 中为坏数据）
 if 'SiliconFlow' in info_map:
     info_map['SiliconFlow'] = (info_map['SiliconFlow'][0], 'api.siliconflow.cn/v1')
 
-# 手动补全：xlsx 无 base_url 但已查证官方 OpenAI 兼容端点的厂商
+# 手动补全：查证官方 OpenAI 兼容端点的厂商
 BASE_URL_FIX = {
     'Speechify': 'api.sws.speechify.com/v1',
     'BlazeAPI': 'api.blazeapi.org/free/v1',
@@ -78,11 +79,8 @@ for line in lines[2:]:
     website, base = info_map.get(name, (url, ''))
     models = usable_map.get(name, [])
     if models:
-        # 只取前 15 个，超出部分用 +N
-        if len(models) > 15:
-            shown = ', '.join(models[:15]) + f' 等共 {len(models)} 个'
-        else:
-            shown = ', '.join(models)
+        # 每个模型占一行（GitHub 表格支持 <br> 换行）
+        shown = '<br>'.join(models)
     else:
         shown = '—'
     if base and base != '—':

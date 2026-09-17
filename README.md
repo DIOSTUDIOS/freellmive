@@ -1,5 +1,3 @@
-# FreeLLMive
-
 持续收集免费、可用的 LLM 提供商
 
 | 厂商名称 | Base URL | 可用模型 |
@@ -30,7 +28,7 @@
 | [SiliconFlow](https://www.siliconflow.cn/) | `api.siliconflow.cn/v1` | zai-org/GLM-5.3<br>tencent/Hy4-preview<br>deepseek-ai/DeepSeek-V4-Flash<br>meituan-longcat/LongCat-2.0<br>zai-org/GLM-5.2<br>moonshotai/Kimi-K2.7-Code<br>deepseek-ai/DeepSeek-V4-Pro<br>Pro/moonshotai/Kimi-K2.6<br>Pro/zai-org/GLM-5.1<br>deepseek-ai/DeepSeek-V3.2<br>Pro/deepseek-ai/DeepSeek-V3.2<br>deepseek-ai/DeepSeek-V3.1-Terminus<br>Pro/deepseek-ai/DeepSeek-V3.1-Terminus<br>Qwen/Qwen3.6-27B<br>Qwen/Qwen3.5-122B-A10B<br>PaddlePaddle/PaddleOCR-VL-1.5<br>deepseek-ai/DeepSeek-R1<br>deepseek-ai/DeepSeek-V3<br>Pro/deepseek-ai/DeepSeek-R1<br>Pro/deepseek-ai/DeepSeek-V3<br>stepfun-ai/Step-3.5-Flash<br>Qwen/Qwen3-VL-32B-Thinking<br>Qwen/Qwen3-VL-8B-Instruct<br>Qwen/Qwen3-VL-8B-Thinking<br>Qwen/Qwen3-VL-30B-A3B-Instruct<br>Qwen/Qwen3-VL-30B-A3B-Thinking<br>Qwen/Qwen3-Omni-30B-A3B-Instruct<br>Qwen/Qwen3-Omni-30B-A3B-Thinking<br>Qwen/Qwen3-Omni-30B-A3B-Captioner<br>deepseek-ai/DeepSeek-OCR<br>inclusionAI/Ling-flash-2.0<br>inclusionAI/Ling-mini-2.0<br>tencent/Hunyuan-MT-7B<br>zai-org/GLM-4.5V<br>zai-org/GLM-4.5-Air<br>ByteDance-Seed/Seed-OSS-36B-Instruct<br>Qwen/Qwen3-Coder-30B-A3B-Instruct<br>Qwen/Qwen3-30B-A3B-Instruct-2507<br>tencent/Hunyuan-A13B-Instruct<br>deepseek-ai/DeepSeek-R1-0528-Qwen3-8B<br>Qwen/Qwen3-14B<br>Qwen/Qwen3-32B<br>THUDM/GLM-4-32B-0414<br>THUDM/GLM-Z1-9B-0414<br>THUDM/GLM-4-9B-0414<br>Qwen/Qwen2.5-72B-Instruct-128K<br>Qwen/Qwen2.5-72B-Instruct<br>Qwen/Qwen2.5-32B-Instruct<br>Qwen/Qwen2.5-14B-Instruct<br>Qwen/Qwen2.5-7B-Instruct<br>Pro/Qwen/Qwen2.5-7B-Instruct<br>LoRA/Qwen/Qwen2.5-32B-Instruct<br>LoRA/Qwen/Qwen2.5-14B-Instruct<br>LoRA/Qwen/Qwen2.5-72B-Instruct<br>LoRA/Qwen/Qwen2.5-7B-Instruct |
 | [BazaarLink](https://bazaarlink.ai/) | `bazaarlink.ai/api/v1` | deepseek-v4-flash-0731free<br>qwen/qwen3.7-flash:free |
 | [AINative Studio](https://ainative.studio/) | `api.ainative.studio/v1` | — |
-| [Aion Labs](https://www.aionlabs.ai/) | `api.aionlabs.ai/v1` | — |
+| [Aion Labs](https://www.aionlabs.ai/) | `api.aionlabs.ai/v1` | aion-labs/aion-2.0<br>aion-labs/aion-3.0<br>aion-labs/aion-3.0-mini<br>aion-labs/aion-rp-llama-3.1-8b |
 | [Requesty](https://www.requesty.ai/) | `router.requesty.ai/v1` | — |
 | [NaraRouter](https://router.bynara.id/) | `router.bynara.id/v1` | — |
 | [SEA-LION](https://sea-lion.ai/) | — | — |
@@ -43,7 +41,7 @@
 | [Volcengine Ark](https://console.volcengine.com/ark) | `ark.cn-beijing.volces.com/api/v3` | — |
 | [LongCat](https://longcat.chat/platform/) | `api.longcat.chat/openai/v1` | — |
 | [iFlytek Spark](https://console.xfyun.cn/app/myapp) | `spark-api-open.xf-yun.com/v1` | — |
-| [TokenRouter](https://www.tokenrouter.com/) | — | — |
+| [TokenRouter](https://www.tokenrouter.com/) | `https://api.tokenrouter.com/v1` | — |
 
 ### 免责声明
 
