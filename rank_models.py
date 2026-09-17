@@ -122,14 +122,41 @@ def pick_top(results, arena, aa, top=9, min_score=0.0):
     return out
 
 
+def find_cached(keyword):
+    """在 web_extract 缓存目录中找最新的匹配榜单文件"""
+    import glob
+    import os
+    patterns = [
+        f"/home/amos/.hermes/cache/web/{keyword}*.md",
+        f"/home/amos/.hermes/cache/web/*{keyword}*.md",
+    ]
+    files = []
+    for p in patterns:
+        files.extend(glob.glob(p))
+    files = [f for f in files if os.path.getsize(f) > 5000]
+    if not files:
+        return None
+    return max(files, key=os.path.getmtime)
+
+
 def main():
     if "--fetch" in sys.argv:
-        print("请手动用 web_extract 抓取榜单保存为 md 文件后调用 --pick")
+        print("请用 web_extract 抓取榜单页面后调用 --pick 或 --auto")
         return
-    if "--pick" in sys.argv:
-        i = sys.argv.index("--pick")
-        arena_md = sys.argv[i + 1]
-        aa_md = sys.argv[i + 2]
+    auto = "--auto" in sys.argv
+    if "--pick" in sys.argv or auto:
+        if auto:
+            arena_md = find_cached("lmarena")
+            aa_md = find_cached("benchlm")
+            if not arena_md or not aa_md:
+                print(f"[error] 未找到榜单缓存文件 (lmarena={arena_md}, benchlm={aa_md})", file=sys.stderr)
+                print("请先用 web_extract 抓取 lmarena.ai/leaderboard/text 和 benchlm.ai/benchmarks/artificialanalysis", file=sys.stderr)
+                sys.exit(1)
+            print(f"[info] 缓存榜单: {arena_md}, {aa_md}", file=sys.stderr)
+        else:
+            i = sys.argv.index("--pick")
+            arena_md = sys.argv[i + 1]
+            aa_md = sys.argv[i + 2]
         top = 9
         if "--top" in sys.argv:
             top = int(sys.argv[sys.argv.index("--top") + 1])
