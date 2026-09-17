@@ -221,3 +221,7 @@ __marimo__/
 test_results.json
 verify_providers.py
 providers_config.json
+
+# 周度流程产物
+ranked_models.json
+providers_candidates.txt

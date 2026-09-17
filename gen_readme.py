@@ -44,12 +44,20 @@ for name, base in BASE_URL_FIX.items():
     if name in info_map:
         info_map[name] = (info_map[name][0], base)
 
-# 2. 读取测试结果
-results = json.load(open('/data/project/freellmive/test_results.json'))
+# 2. 读取测试结果（优先精选榜 ranked_models.json，否则全量）
 usable_map = {}
-for r in results:
-    if r.get('usable_models'):
-        usable_map[r['name']] = r['usable_models']
+try:
+    ranked = json.load(open('/data/project/freellmive/ranked_models.json'))
+    for name, rows in ranked.items():
+        if rows:
+            usable_map[name] = [r['model'] for r in rows]
+    print('使用精选榜单 ranked_models.json')
+except FileNotFoundError:
+    results = json.load(open('/data/project/freellmive/test_results.json'))
+    for r in results:
+        if r.get('usable_models'):
+            usable_map[r['name']] = r['usable_models']
+    print('使用 test_results.json 全量模型')
 
 # 3. 读取当前 README，保留非表格部分与表头，重建表格行
 with open('/data/project/freellmive/README.md', 'r', encoding='utf-8') as f:
