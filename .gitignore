@@ -220,3 +220,4 @@ __marimo__/
 # Test results (contains masked keys, keep local)
 test_results.json
 verify_providers.py
+providers_config.json
