@@ -16,8 +16,8 @@ from openai import OpenAI
 CONFIG_FILE = "providers_config.json"
 RESULT_FILE = "test_results.json"
 TIMEOUT = 25
-PROVIDER_WORKERS = 4   # 厂商级并发（照顾限流）
-MODEL_WORKERS = 2
+PROVIDER_WORKERS = 3   # 厂商级并发（照顾限流，过高会误判）
+MODEL_WORKERS = 1      # 厂商内串行（严格限流的厂商如 Lucidity 5次/分钟，并发必误判）
 NEW_PROBE_LIMIT = 20   # 新厂商探测的模型数上限
 
 _print_lock = threading.Lock()
@@ -30,6 +30,22 @@ def log(msg):
 
 def build_client(base_url, api_key):
     return OpenAI(base_url=base_url, api_key=api_key, timeout=TIMEOUT, max_retries=0)
+
+
+def _has_output(resp):
+    """判断响应是否有实际输出：content 或 reasoning_content 任一非空即算成功
+    （推理模型的 reasoning 占满 token 时 content 会为空，不能算失败）
+    """
+    if not getattr(resp, "choices", None):
+        return False
+    msg = resp.choices[0].message
+    content = (getattr(msg, "content", None) or "").strip()
+    reasoning = (getattr(msg, "reasoning_content", None) or "").strip()
+    if content or reasoning:
+        return True
+    # 被 max_tokens 截断也说明模型在正常生成
+    finish = getattr(resp.choices[0], "finish_reason", None)
+    return finish == "length"
 
 
 def retest_provider(name, cfg, prev_usable, mode="retest"):
@@ -64,9 +80,16 @@ def retest_provider(name, cfg, prev_usable, mode="retest"):
         removed = []
         queue = sorted(current_ids)[:NEW_PROBE_LIMIT]
     else:
-        # 重测队列 = 上次可用 ∩ 当前列表（不在当前列表 => removed）
-        removed = [m for m in prev_usable if m not in current_ids]
-        queue = [m for m in prev_usable if m in current_ids]
+        inter = [m for m in prev_usable if m in current_ids]
+        if not inter and prev_usable:
+            # 交集为空 => /models 可能不可用或不完整（已知 Aion Labs 等），
+            # 不能判定失效，直接用上次模型做 chat 验证（chat 才是金标准）
+            removed = []
+            queue = list(prev_usable)
+        else:
+            # 重测队列 = 上次可用 ∩ 当前列表（不在当前列表 => removed）
+            removed = [m for m in prev_usable if m not in current_ids]
+            queue = inter
 
     def _test_one(model):
         import time as _t
@@ -78,9 +101,9 @@ def retest_provider(name, cfg, prev_usable, mode="retest"):
                     resp = c.chat.completions.create(
                         model=model,
                         messages=[{"role": "user", "content": "你好，请用一句话介绍一下你自己。"}],
-                        max_tokens=200,
+                        max_tokens=500,
                     )
-                    if resp.choices and resp.choices[0].message.content:
+                    if _has_output(resp):
                         return model
                 except Exception:
                     continue
@@ -96,6 +119,31 @@ def retest_provider(name, cfg, prev_usable, mode="retest"):
                 r = fut.result()
                 if r:
                     usable.append(r)
+
+    # 失败较多时（全失败，或可用数不足上次一半）串行复查失败模型，避免限流误判
+    failed = [m for m in queue if m not in usable]
+    need_recheck = bool(failed) and prev_usable and (
+        not usable or len(usable) < max(1, len(prev_usable) // 2)
+    )
+    if need_recheck:
+        import time as _t
+        _t.sleep(5)
+        for m in failed:
+            for ki in range(len(api_keys)):
+                try:
+                    c = client if ki == 0 else build_client(base_url, api_keys[ki])
+                    resp = c.chat.completions.create(
+                        model=m,
+                        messages=[{"role": "user", "content": "你好，请用一句话介绍一下你自己。"}],
+                        max_tokens=500,
+                    )
+                    if _has_output(resp):
+                        usable.append(m)
+                        break
+                except Exception:
+                    continue
+            _t.sleep(1.5)
+
     try:
         client.close()
     except Exception:
@@ -136,11 +184,18 @@ def main():
             plan[name] = ("new", [])
     skipped = [n for n in todo if n not in plan]
 
-    # 过滤命令行指定厂商
+    # 过滤命令行指定厂商（支持逗号分隔多个）
     if "--provider" in sys.argv:
         i = sys.argv.index("--provider")
-        only = sys.argv[i + 1]
-        plan = {n: v for n, v in plan.items() if n == only}
+        only = {n.strip() for n in sys.argv[i + 1].split(",") if n.strip()}
+        plan = {n: v for n, v in plan.items() if n in only}
+    # 强制重测（含上次不可用的厂商），以便修正限流误判
+    if "--force" in sys.argv:
+        i = sys.argv.index("--force")
+        forced = [n.strip() for n in sys.argv[i + 1].split(",") if n.strip()]
+        for n in forced:
+            if n in todo and n not in plan:
+                plan[n] = ("new", [])
     if not plan:
         print(f"没有需要重测的厂商。跳过 {len(skipped)} 个上次不可用的厂商（保留原诊断）", flush=True)
         return
